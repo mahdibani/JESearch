@@ -1,0 +1,10 @@
+pydantic
+requests
+python-dotenv
+fastapi
+pymupdf
+scikit-learn
+uvicorn
+asyncio
+pypdf2
+nest_asyncio
