@@ -19,7 +19,7 @@ app.add_middleware(
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="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",
+    api_key="*****",
 )
 
 MY_JUNIOR = {
