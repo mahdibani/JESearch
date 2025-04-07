@@ -1,30 +1,31 @@
-import uvicorn
+import uvicorn, nest_asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from openai import OpenAI
+import json
 import logging
 from fastapi.middleware.cors import CORSMiddleware
-
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
-    api_key="*****",
+    api_key="*********", 
 )
+
 
 MY_JUNIOR = {
     "name": "My Junior Enterprise",
     "services": "Web and Desktop Development, Graphic Design, Mobile Development, Community Management",
     "description": "Project Department, Foreign Affairs Department, Marketing Department, commercial development and prospecting."
 }
+
 
 class MessageRequest(BaseModel):
     je_name: str = Field(..., min_length=1)
@@ -35,16 +36,16 @@ class MessageRequest(BaseModel):
 @app.post("/generate_collaboration_message")
 async def generate_collaboration_message(request: MessageRequest):
     try:
-        if not all([
-            request.je_name.strip(),
-            request.je_services.strip(),
-            request.je_description.strip(),
-            request.recommendations.strip()
-        ]):
-            raise HTTPException(status_code=400, detail="All fields must contain non-whitespace characters")
-
-        prompt = f"""... (keep your email generation prompt here) ..."""
+        prompt = f"""Create a formal collaboration email from INceptum JE to {request.je_name} based on these recommendations: {request.recommendations}
         
+        Include these details:
+        - INceptum JE services: {MY_JUNIOR['services']}
+        - {request.je_name} services: {request.je_services}
+        - Keep it professional but friendly
+        - Use proper business email format
+        - Include our website: https://inceptumje.tn/
+        - Signature: INceptum JE Team"""
+
         completion = client.chat.completions.create(
             model="meta-llama/llama-3.3-70b-instruct",
             messages=[
@@ -55,12 +56,8 @@ async def generate_collaboration_message(request: MessageRequest):
         
         return {"message": completion.choices[0].message.content.strip()}
     
-    except HTTPException as he:
-        logging.error(f"Validation error: {he.detail}")
-        raise he
     except Exception as e:
-        logging.error(f"Generation error: {str(e)}")
+        logging.error(f"Message generation error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate message")
-
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8066)
